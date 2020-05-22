@@ -306,62 +306,138 @@ group by job
 having avg(sal) = (select min(avg(sal)) 
                    from emp
                    group by job);
-                   
-select job, min(sal)
-from (select job, min(sal) as sal
-      from emp
-      group by job)
+
+--이중으로 서브쿼리
+select job, avg(sal)
+from emp
 group by job
-;
+having avg(sal) =(select min(av)
+                  from (select job, avg(sal) as av from emp group by job));
+
+-- inline view, rownum 이용
+select job, sal
+from (select job, avg(sal) as sal 
+      from emp 
+      group by job 
+      order by sal)
+where rownum =1;            
+
 --47. 각 부서의 최소 급여를 받는 사원의 이름, 급여, 부서번호를 표시하시오.
-select ename, sal, deptno from emp;
+select ename, sal, deptno 
+from emp e
+where sal in (select min(sal) from emp group by deptno)
+order by deptno; 
 
 
---48. 담당업무가 ANALYST 인 사원보다 급여가 적으면서 업무가 ANALYST가 아닌 사원들을 표시(사원번호, 이름, 담당 업무, 급여)하시오.
-
-
+--48. 담당업무가 ANALYST 인 사원보다 급여가 적으면서 
+--업무가 ANALYST가 아닌 사원들을 표시(사원번호, 이름, 담당 업무, 급여)하시오.
+select e.empno,e.ename,e.job,e.sal
+from emp e
+where sal < any(select m.sal 
+                from emp m
+                where m.job = 'ANALYST') 
+      and job != 'ANALYST'
+order by e.sal;
 
 --49. 부하직원이 없는 사원의 이름을 표시하시오.
-
-
+select ename
+from emp
+where empno not in(select distinct(mgr)
+                   from emp
+                   where mgr is not null)
+;
 
 --50. 부하직원이 있는 사원의 이름을 표시하시오.
+select ename
+from emp
+where empno in(select distinct(mgr)
+               from emp
+               where mgr is not null)
+;
 
+select distinct(e.empno), e.ename
+from emp e inner join emp m
+on e.empno = m.mgr
+order by empno;
 
+--51. BLAKE와 동일한 부서에 속한 사원의 이름과 입사일을 표시하는 질의를 작성하시오. 
+--( 단 BLAKE는 제외 )
+select ename, hiredate
+from emp
+where deptno in (select deptno
+                from emp
+                where ename = 'BLAKE')
+      and ename != 'BLAKE'
+;
 
---51. BLAKE와 동일한 부서에 속한 사원의 이름과 입사일을 표시하는 질의를 작성하시오. ( 단 BLAKE는 제외 )
-
-
-
---52. 급여가 평균 급여보다 많은 사원들의 사원 번호와 이름을 표시하되 결과를 급여에 대해서 오름차순으로 정렬하시오.
-
+--52. 급여가 평균 급여보다 많은 사원들의 사원 번호와 이름을 표시하되
+--  결과를 급여에 대해서 오름차순으로 정렬하시오.
+select empno, ename
+from emp
+where sal > (select avg(sal)
+             from emp)
+order by sal;
 
 
 --53. 이름에 K가 포함된 사원과 같은 부서에서 일하는 사원의 사원 번호와 이름을 표시하시오.
-
-
+select empno, ename, deptno
+from emp
+where deptno = any(select deptno
+                   from emp
+                   where ename like '%K%')
+      and ename not like '%K%';
 
 --54. 부서위치가 DALLAS인 사원의 이름과 부서번호 및 담당업무를 표시하시오.
+select ename, deptno, job
+from emp
+where deptno = (select deptno
+                from dept
+                where loc = 'DALLAS');
 
+select e.ename,e.deptno, e.job
+from emp e, dept d
+where e.deptno = d.deptno and d.loc = 'DALLAS';
 
 
 --55. KING에게 보고하는 사원의 이름과 급여를 표시하시오.
-
-
+select ename, sal
+from emp
+where mgr = (select empno
+             from emp
+             where ename = 'KING'); 
 
 --56. RESEARCH 부서의 사원에 대한 부서번호, 사원이름 및 담당 업무를 표시하시오.
+select deptno, ename, job
+from emp
+where deptno in (select deptno 
+                 from dept
+                 where dname ='RESEARCH')
+;
 
-
-
---57. 평균 월급보다 많은 급여를 받고 이름에 M이 포함된 사원과 같은 부서에서 근무하는 사원의 사원 번호, 이름, 급여를 표시하시오.
-
-
+--57. 평균 월급보다 많은 급여를 받고 이름에 M이 포함된 사원과 
+-- 같은 부서에서 근무하는 사원의 사원 번호, 이름, 급여를 표시하시오.
+select empno, ename, sal
+from emp
+where sal > (select avg(sal) from emp)
+      and deptno = any(select deptno
+                       from emp
+                       where ename like '%M%');
 
 --58. 평균급여가 가장 적은 업무를 찾으시오.
-
+select job, avg(sal)
+from emp
+group by job
+having avg(sal) = (select min(avg(sal)) 
+                   from emp
+                   group by job);
 
 
 --59. 담당업무가 MANAGER 인 사원이 소속된 부서와 동일한 부서의 사원을 표시하시오.
+select ename
+from emp
+where deptno = any(select deptno
+                   from emp
+                   where job = 'MANAGER');
 
 --SQL 추가문제
 -- 1. 마당서점의고객이요구하는다음질문에대해SQL 문을작성하시오.
@@ -382,9 +458,31 @@ select count(*) from orders
 where custid = 1; -- count 안에 컬럼명을 써도되지만 *가 더 안정적일듯
 
 --(5) 박지성이구매한도서의출판사수
---(6) 박지성이구매한도서의이름, 가격, 정가와판매가격의차이
---(7) 박지성이구매하지않은도서의이름
+select count(distinct(publisher))"출판사의 수"
+from book
+where bookid in (select bookid
+                from orders
+                where custid = (select custid
+                                from customer
+                                where name = '박지성'));
 
+
+--(6) 박지성이구매한도서의이름, 가격, 정가와판매가격의차이
+select bookname, price, (price - saleprice)
+from book b,orders o
+where b.bookid = o.bookid 
+      and o.custid = (select custid
+                      from customer
+                      where name = '박지성');
+
+
+--(7) 박지성이구매하지않은도서의이름
+select distinct(bookname)
+from book b,orders o
+where b.bookid = o.bookid 
+      and o.custid != (select custid
+                      from customer
+                      where name = '박지성');
 
 --2 마당서점의운영자와경영자가요구하는다음질문에대해SQL 문을작성하시오.
 --(1) 마당서점도서의총개수
@@ -413,9 +511,34 @@ select name, address from customer
 where name like '김%' and name like '%아';
 
 --(8) 주문하지않은고객의이름(부속질의사용)
+select name
+from customer
+where custid not in (select custid
+                     from orders);
+                     
 --(9) 주문금액의총액과주문의평균금액
+select sum(saleprice), avg(saleprice)
+from orders;
+
 --(10) 고객의이름과고객별구매액
+select c.name, e.price
+from customer c inner join(select custid,sum(saleprice) as price
+                           from orders
+                           group by custid) e
+on c.custid = e.custid
+order by c.custid;
+
+select c.name, sum(o.saleprice)
+from customer c, orders o
+where c.custid=o.custid
+group by c.custid;
+
 --(11) 고객의이름과고객이구매한도서목록
+select name, bookname
+from customer c cross join orders o cross join book b
+where c.custid = o.custid and o.bookid = b.bookid
+order by c.custid;
+
 --(12) 도서의가격(Book 테이블)과판매가격(Orders 테이블)의차이가가장많은주문
 --(13) 도서의판매액평균보다자신의구매액평균이더높은고객의이름
 
