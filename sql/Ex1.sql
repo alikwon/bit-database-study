@@ -525,18 +525,20 @@ select sum(saleprice), avg(saleprice)
 from orders;
 
 --(10) 고객의이름과고객별구매액
-select c.name, e.price
+select e.custid,c.name, e.price
 from customer c inner join(select custid,sum(saleprice) as price
                                      from orders
                                      group by custid) e
 on c.custid = e.custid
 order by c.custid;
 
-select c.name, sum(o.saleprice) "price"
-from customer c, orders o
+select o.custid, c.name, sum(o.saleprice) "price"
+from customer c cross join orders o
 where c.custid = o.custid
-group by c.name
-;
+group by c.name, o.custid
+order by o.custid;
+
+
 --(11) 고객의이름과고객이구매한도서목록
 select name, bookname
 from customer c cross join orders o cross join book b
@@ -547,10 +549,26 @@ order by c.custid
 
 
 --(12) 도서의가격(Book 테이블)과판매가격(Orders 테이블)의차이가가장많은주문
+select *
+from orders o join book b
+on o.bookid = b.bookid
+and abs(o.saleprice-b.price) = (select max(abs(saleprice-price))
+								from orders join book
+								using(bookid));
+								
 --(13) 도서의판매액평균보다자신의구매액평균이더높은고객의이름
-
+--select * from customer;
+--select avg (SALEPRICE) from orders;
+--select * from orders;
+select c.name
+from orders o join customer c
+on o.custid = c.custid
+group by c.name, c.custid
+having avg(o.saleprice) > (select avg (saleprice) from orders)
+order by c.custid;
 --3. 마당서점에서 다음의 심화된 질문에 대해 SQL 문을 작성하시오.
 --(1) 박지성이 구매한 도서의 출판사와 같은 출판사에서 도서를 구매한 고객의 이름
+
 --(2) 두 개 이상의 서로 다른 출판사에서 도서를 구매한 고객의 이름
 
 
