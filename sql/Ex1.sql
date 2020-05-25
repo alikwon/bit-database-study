@@ -279,6 +279,7 @@ where e.mgr = m.empno and e.hiredate < m.hiredate;
 
 --subquery
 --43. 사원 번호가 7788인 사원과 담당 업무가 같은 사원을 표시(사원 이름과 담당업무)하시오.
+-- My code
 select ename, job
 from emp
 where job = (select job 
@@ -287,32 +288,40 @@ where job = (select job
              and not empno = 7788; -- 7788은 표시 안함 
 
 --44. 사원번호가 7499인 사원보다 급여가 많은 사원을 표시하시오. 사원이름과 담당 업무
+--My code
 select ename, job
 from emp
 where sal > (select sal
              from emp
              where empno = 7499);
-             
+
 --45. 최소급여를 받는 사원의 이름, 담당업무 및 급여를 표시하시오. (그룹함수 사용)
+--My Code
 select ename, job, sal
 from emp
 where sal = (select min(sal)
               from emp);
+		    
+--Calss Code (그룹함수 사용 안한거)
+select ename, job, sal
+from emp
+where sal <= all(select sal from emp)
+;
 
 --46. 평균급여가 가장 적은 직급의 직급 이름과 직급의 평균을 구하시오.
 select job, avg(sal)
 from emp
 group by job
 having avg(sal) = (select min(avg(sal)) 
-                   from emp
-                   group by job);
+					from emp
+					group by job);
 
 --이중으로 서브쿼리
 select job, avg(sal)
 from emp
 group by job
 having avg(sal) =(select min(av)
-                  from (select job, avg(sal) as av from emp group by job));
+				    from (select job, avg(sal) as av from emp group by job));
 
 -- inline view, rownum 이용
 select job, sal
@@ -322,22 +331,55 @@ from (select job, avg(sal) as sal
       order by sal)
 where rownum =1;            
 
+--Class Code : all을 사용해서 작은값을 찾음
+select job, avg(sal)
+from emp
+group by job
+having avg(sal) <= all (select avg(sal)
+						from emp
+						group by job)
+;
+-- 부서별 평균의 최소 평균값
+select avg(sal) 
+from emp 
+group by deptno
+;
+select min(avg) 
+from (select avg(sal) as avg 
+		from emp 
+		group by job);
 --47. 각 부서의 최소 급여를 받는 사원의 이름, 급여, 부서번호를 표시하시오.
 select ename, sal, deptno 
 from emp e
 where sal in (select min(sal) from emp group by deptno)
-order by deptno; 
+; 
 
+--Class Code : 조금더 타이트함
+select ename, sal, deptno 
+from emp e
+where sal in (select min(sal) 
+			   from emp e2
+			   where e.deptno = e2.deptno
+			   group by deptno)
+; 
 
 --48. 담당업무가 ANALYST 인 사원보다 급여가 적으면서 
 --업무가 ANALYST가 아닌 사원들을 표시(사원번호, 이름, 담당 업무, 급여)하시오.
 select e.empno,e.ename,e.job,e.sal
 from emp e
 where sal < any(select m.sal 
-                from emp m
-                where m.job = 'ANALYST') 
+				from emp m
+				where m.job = 'ANALYST') 
       and job != 'ANALYST'
-order by e.sal;
+;
+
+--Class Code
+select empno, ename, job, sal
+from emp
+where sal < all(select distinct sal 
+				from emp 
+				where job='ANALYST')
+and job!= 'ANALYST';
 
 --49. 부하직원이 없는 사원의 이름을 표시하시오.
 select ename
@@ -386,6 +428,13 @@ where deptno = any(select deptno
                    from emp
                    where ename like '%K%')
       and ename not like '%K%';
+	 
+--Class Code
+select empno, ename, deptno
+from emp
+where deptno in (select distinct deptno 
+				   from emp 
+				   where ename like '%K%');
 
 --54. 부서위치가 DALLAS인 사원의 이름과 부서번호 및 담당업무를 표시하시오.
 select ename, deptno, job
@@ -398,20 +447,35 @@ select e.ename,e.deptno, e.job
 from emp e, dept d
 where e.deptno = d.deptno and d.loc = 'DALLAS';
 
+-- Class Code
+select ename, deptno, job
+from emp
+where deptno in (select deptno 
+				   from dept 
+				   where loc like 'DALLAS')
+;
 
 --55. KING에게 보고하는 사원의 이름과 급여를 표시하시오.
+-- MGR이 KING의 사원번호인 사원
 select ename, sal
 from emp
-where mgr = (select empno
-             from emp
-             where ename = 'KING'); 
+where mgr = ( select empno
+				from emp
+				where ename = 'KING'); 
 
 --56. RESEARCH 부서의 사원에 대한 부서번호, 사원이름 및 담당 업무를 표시하시오.
 select deptno, ename, job
 from emp
 where deptno in (select deptno 
-                 from dept
+				from dept
                  where dname ='RESEARCH')
+;
+
+--Class Code : join 이용 ( 셀렉트를 한번하는게 더 낫다) 
+select e.deptno, ename, job
+from emp e, dept d
+where e.deptno = d.deptno
+and dname = 'RESEARCH'
 ;
 
 --57. 평균 월급보다 많은 급여를 받고 이름에 M이 포함된 사원과 
@@ -423,21 +487,44 @@ where sal > (select avg(sal) from emp)
                        from emp
                        where ename like '%M%');
 
+--Class Code
+select empno, ename, sal
+from emp
+where sal > (select avg(sal) from emp)
+      and deptno in (select deptno
+					   from emp
+					   where ename like '%M%');
+
+
 --58. 평균급여가 가장 적은 업무를 찾으시오.
 select job, avg(sal)
 from emp
 group by job
 having avg(sal) = (select min(avg(sal)) 
-                   from emp
-                   group by job);
+					 from emp
+				  	 group by job);
 
-
+--Class Code
+select job, avg(sal)
+from emp
+group by job
+having avg(sal) <= all(select min(avg(sal)) 
+						  from emp
+						  group by job)
+;
 --59. 담당업무가 MANAGER 인 사원이 소속된 부서와 동일한 부서의 사원을 표시하시오.
 select ename
 from emp
 where deptno = any(select deptno
-                   from emp
-                   where job = 'MANAGER');
+		                    from emp
+				          where job = 'MANAGER');
+
+--Class Code
+select ename
+from emp
+where deptno in (select deptno
+				     from emp
+			          where job = 'MANAGER');
 
 --SQL 추가문제
 -- 1. 마당서점의고객이요구하는다음질문에대해SQL 문을작성하시오.
@@ -465,20 +552,41 @@ where custid = 1; -- count 안에 컬럼명을 써도되지만 *가 더 안정�
 select count(distinct(publisher))"출판사의 수"
 from book
 where bookid in (select bookid
-                from orders
-                where custid = (select custid
-                                        from customer
-                                        where name = '박지성'));
+					from orders
+					where custid = (select custid
+									   from customer
+									   where name = '박지성'));
 
+--Class Code
+select count(distinct b.publisher)
+from customer c, orders o, book b
+where c.custid=o.custid AND o.bookid = b.bookid
+and c.name = '박지성'
+;
 
+select count(distinct publisher)
+from book
+where bookid in (
+	select distinct o.bookid
+	from orders o join customer c
+	on o.custid = c.custid and c.name = '박지성')
+;
 --(6) 박지성이구매한도서의이름, 가격, 정가와판매가격의차이
 select bookname, price, (price - saleprice)
 from book b,orders o
 where b.bookid = o.bookid 
-      and o.custid = (select custid
+      and custid = (select custid
                       from customer
                       where name = '박지성');
-
+				  
+--Class Code
+--join 처리
+select b.bookname, b.price, b.price-o.saleprice
+from orders o cross join customer c cross join book b
+where c.custid = o.custid 
+and o.bookid = b.bookid 
+and c.name = '박지성'
+;
 
 --(7) 박지성이구매하지않은도서의이름
 select distinct(bookname)
@@ -488,6 +596,14 @@ where b.bookid = o.bookid
                       from customer
                       where name = '박지성');
 
+--Class Code
+
+select bookname
+from book
+where bookid not in (select o.bookid
+						from orders o natural join customer c
+						where c.name = '박지성')
+;
 --2 마당서점의운영자와경영자가요구하는다음질문에대해SQL 문을작성하시오.
 --(1) 마당서점도서의총개수
 select count(*) from book;
@@ -517,27 +633,34 @@ where name like '김%' and name like '%아';
 --(8) 주문하지않은고객의이름(부속질의사용)
 select name
 from customer
-where custid not in (select custid
-                     from orders);
+where custid not in (select distinct custid
+					    from orders);
+
+--Class Code : Outer join 사용
+select c.name
+from orders o join customer c
+on o.custid(+) = c.custid
+and o.orderid is null
+;
                      
 --(9) 주문금액의총액과주문의평균금액
 select sum(saleprice), avg(saleprice)
 from orders;
 
+
 --(10) 고객의이름과고객별구매액
 select e.custid,c.name, e.price
-from customer c inner join(select custid,sum(saleprice) as price
+from customer c join(select custid,sum(saleprice) as price
                                      from orders
                                      group by custid) e
 on c.custid = e.custid
 order by c.custid;
 
-select o.custid, c.name, sum(o.saleprice) "price"
-from customer c cross join orders o
-where c.custid = o.custid
-group by c.name, o.custid
-order by o.custid;
-
+select c.name, sum(o.saleprice) "price"
+from customer c join orders o
+on c.custid = o.custid
+group by c.name
+;
 
 --(11) 고객의이름과고객이구매한도서목록
 select name, bookname
@@ -547,15 +670,22 @@ where c.custid = o.custid
 order by c.custid
 ;
 
-
 --(12) 도서의가격(Book 테이블)과판매가격(Orders 테이블)의차이가가장많은주문
-select *
+select bookname, price-saleprice
 from orders o join book b
 on o.bookid = b.bookid
 and abs(o.saleprice-b.price) = (select max(abs(saleprice-price))
 								from orders join book
 								using(bookid));
-								
+
+--Class Code
+select bookname, price-saleprice
+from orders o join book b
+on o.bookid = b.bookid
+and price - saleprice = (select max(b.price-o.saleprice)
+						   from orders o join book b
+						   on o.bookid = b.bookid)
+;
 --(13) 도서의판매액평균보다자신의구매액평균이더높은고객의이름
 --select * from customer;
 --select avg (SALEPRICE) from orders;
@@ -565,10 +695,48 @@ from orders o join customer c
 on o.custid = c.custid
 group by c.name, c.custid
 having avg(o.saleprice) > (select avg (saleprice) from orders)
-order by c.custid;
+;
+
+--Class Code
+select c.name
+from orders o join customer c
+using(custid)
+group by c.name
+having avg(saleprice) > (select avg(saleprice) from orders)
+;
 --3. 마당서점에서 다음의 심화된 질문에 대해 SQL 문을 작성하시오.
 --(1) 박지성이 구매한 도서의 출판사와 같은 출판사에서 도서를 구매한 고객의 이름
+-- 박지성이 구매한 도서의 ID
+--select bookid
+--from orders o join customer c
+--on c.custid = o.custid and c.name = '박지성'
+--;
+--select c.custid, c.name , o.bookid
+--from orders o join customer c
+--on c.custid = o.custid
+--;
+--
+--select i.bookid ,b.publisher, i.name
+--from book b  join (select name , bookid
+--					from orders join customer
+--					using (custid)) i
+--on b.bookid = i.bookid
+--;
+
+--Class Code
+select name
+from orders o cross join customer c cross join book b
+where o.custid = c.custid and o.bookid = b.bookid
+and b.publisher in (select distinct b.publisher
+					  from orders o cross join customer c cross join book b
+					  where o.custid = c.custid and o.bookid = b.bookid and c.name ='박지성')
+and name != '박지성'
+;
 
 --(2) 두 개 이상의 서로 다른 출판사에서 도서를 구매한 고객의 이름
-
-
+select c.name, count(distinct b.publisher)
+from orders o cross join customer c cross join book b
+where o.custid = c.custid and o.bookid = b.bookid
+group by c.name
+having count(distinct publisher) >=2
+;
