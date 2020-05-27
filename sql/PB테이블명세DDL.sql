@@ -33,23 +33,23 @@ create table phoneinfo_com(
 );
 -- 기본정보
 insert into phoneInfo_basic (idx,fr_name, fr_phonenumber, fr_email, fr_address)
-	values (1,'손흥민','010-1111-1111','son@naver.com','영국');
+	values (PB_BASIC_IDX_SEQ.NEXTVAL,'손흥민','010-1111-1111','son@naver.com','영국');
 insert into phoneinfo_basic (idx,fr_name,fr_phonenumber,fr_email,fr_address,fr_regdate) 
-	values (2, '박지성','010-2222-2222','jisung@naver.com','서울','20/01/01');
+	values (PB_BASIC_IDX_SEQ.NEXTVAL, '박지성','010-2222-2222','jisung@naver.com','서울','20/01/01');
 insert into phoneinfo_basic (idx, fr_name, fr_phonenumber) 
-	values (3, '권재준','010-3333-3333');
+	values (PB_BASIC_IDX_SEQ.NEXTVAL, '권재준','010-3333-3333');
 insert into phoneinfo_basic (idx, fr_name, fr_phonenumber, fr_address, fr_regdate) 
-	values (4, '권소영', '010-4444-4444','오산', '19/12/12');
+	values (PB_BASIC_IDX_SEQ.NEXTVAL, '권소영', '010-4444-4444','오산', '19/12/12');
 insert into phoneinfo_basic (idx, fr_name, fr_phonenumber, fr_email, fr_address, fr_regdate) 
-	values (5, '정웅종', '010-5555-5555','ung@naver.com','성남', '20/05/26');
+	values (PB_BASIC_IDX_SEQ.NEXTVAL, '정웅종', '010-5555-5555','ung@naver.com','성남', '20/05/26');
 
 -- 학교정보 insert
 insert into phoneinfo_univ (idx, fr_u_major,fr_u_year ,fr_ref)
-	values (1,'COMPUTER',4,1);
+	values (PB_univ_IDX_SEQ.NEXTVAL,'COMPUTER',4,PB_BASIC_IDX_SEQ.CURRVAL);
 insert into phoneinfo_univ (idx, fr_ref) 
-	values (2, 2);
+	values (PB_univ_IDX_SEQ.NEXTVAL, PB_BASIC_IDX_SEQ.CURRVAL);
 insert into phoneinfo_univ 
-	values (3, 'ELECTRONIC', 3, 4);
+	values (PB_univ_IDX_SEQ.NEXTVAL, 'ELECTRONIC', 3, PB_BASIC_IDX_SEQ.CURRVAL);
 
 -- 회사정보 insert
 insert into phoneinfo_com (idx,fr_u_company , fr_ref)
@@ -205,3 +205,32 @@ delete from phoneinfo_basic
 where fr_name = '권소영'
 	and fr_phonenumber like '%4444%4444%'
 ;
+
+------------------------------------------
+--sequence 생성
+------------------------------------------
+--1. basic 테이블 seq
+create sequence pb_basic_idx_seq 
+	start with 0
+	minvalue 0
+;
+--2. com 테이블 seq
+create sequence pb_com_idx_seq
+	start with 0
+	minvalue 0
+;
+--3. univ 테이블 seq
+create sequence pb_univ_idx_seq
+	start with 0
+	minvalue 0
+;
+
+
+
+
+
+
+
+
+
+
