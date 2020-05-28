@@ -31,7 +31,7 @@ from emp
 order by hiredate asc
 ;
 select * from emp_hir_view;
-select rownum, empno, ename, hiredate from emp_hir_view where rownum <=5;
+select rownum, empno, ename, hiredate from emp_hir_view where rownum <= 5;
 select rownum, empno, ename, hiredate from emp order by hiredate;
 
 
