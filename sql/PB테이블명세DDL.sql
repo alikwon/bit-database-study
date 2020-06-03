@@ -7,7 +7,9 @@ drop sequence PBC_idx_seq;
 drop sequence PBU_idx_seq;
 drop sequence PBF_idx_seq;
 --1. basic 테이블 seq
-
+select *
+from orders o cross join customer c cross join book b
+where o.custid = c.custid and b.bookid = o.bookid;
 create sequence PBB_idx_seq 
 	start with 0
 	minvalue 0
@@ -22,8 +24,7 @@ create sequence PBU_idx_seq
 	start with 0
 	minvalue 0
 ;
-select PBB_idx_seq.currval
-from dual;
+
 create sequence PBF_idx_seq
 	start with 0
 	minvalue 0
@@ -42,8 +43,7 @@ create table phoneinfo_basic(
 	name varchar2(20) not null,
 	phonenumber varchar2(20) not null,
 	email varchar2(20),
-	address varchar2(20),
-	regdate date default sysdate
+	address varchar2(20)
 );
 create table phoneinfo_univ(
 	idx number(6) primary key,
@@ -71,7 +71,15 @@ create table phoneinfo_cafe(
 		references phoneinfo_basic(idx) on delete cascade
 );
 commit;
-select * from PHONEINFO_BASIC b,PHONEINFO_CAFE u where b.IDX=u.ref;
+delete from phoneinfo_basic where name = '류현진';
+select * from phoneinfo_basic b join phoneinfo_univ u 
+on b.idx = u.ref and b.name like '%권%';
+update phoneinfo_basic
+set PHONENUMBER='01031986937'
+where name = '권재준';
+select * from PHONEINFO_BASIC;
+select * from PHONEINFO_UNIV;
+select * from phoneinfo_com;
 -- 기본정보
 insert into phoneInfo_basic (idx,fr_name, fr_phonenumber, fr_email, fr_address)
 	values (PB_BASIC_IDX_SEQ.NEXTVAL,'손흥민','010-1111-1111','son@naver.com','영국');
