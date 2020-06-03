@@ -50,7 +50,7 @@ select rownum, empno, ename, hiredate from emp order by hiredate;
 create sequence dept_deptno_seq01;
 drop sequence dept_deptno_seq01;
 
-select dept_deptno_seq01.nextval
+select PBB_idx_seq.nextval
 from dual;
-select dept_deptno_seq01.currval
+select PBB_idx_seq.currval
 from dual;

@@ -43,3 +43,7 @@ rollback;
 select * from emp_view;
 select * from emp01;
 delete from dept where deptno = 70;
+
+
+	
+	

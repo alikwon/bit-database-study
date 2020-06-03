@@ -1,6 +1,35 @@
 drop table phoneinfo_basic;
 drop table phoneinfo_univ;
 drop table phoneinfo_com;
+drop table phoneinfo_cafe;
+drop sequence PBB_idx_seq;
+drop sequence PBC_idx_seq;
+drop sequence PBU_idx_seq;
+drop sequence PBF_idx_seq;
+--1. basic 테이블 seq
+
+create sequence PBB_idx_seq 
+	start with 0
+	minvalue 0
+;
+--2. com 테이블 seq
+create sequence PBC_idx_seq
+	start with 0
+	minvalue 0
+;
+--3. univ 테이블 seq
+create sequence PBU_idx_seq
+	start with 0
+	minvalue 0
+;
+select PBB_idx_seq.currval
+from dual;
+create sequence PBF_idx_seq
+	start with 0
+	minvalue 0
+;
+
+
 -- 외래키 설정시에 상위테이블의 행이 삭제될 때를 설정
 -- reference phoneinfo_basic(idx) on delete 설정 옵션
 -- 	no action : 모두 삭제 불가
@@ -10,27 +39,39 @@ drop table phoneinfo_com;
 
 create table phoneinfo_basic(
 	idx number(6) primary key,
-	fr_name varchar2(20) not null,
-	fr_phonenumber varchar2(20) not null,
-	fr_email varchar2(20),
-	fr_address varchar2(20),
-	fr_regdate date default sysdate
+	name varchar2(20) not null,
+	phonenumber varchar2(20) not null,
+	email varchar2(20),
+	address varchar2(20),
+	regdate date default sysdate
 );
 create table phoneinfo_univ(
 	idx number(6) primary key,
-	fr_u_major varchar2(20) default 'N' not null,
-	fr_u_year number(1) default '1' check(fr_u_year between 1 and 4) not null,
-	fr_ref number(1) not null,
-	constraint phoneinfo_univ_idx_fk foreign key(fr_ref) 
+	major varchar2(20) default 'N',
+	year number(2) check(year between 1 and 4),
+	ref number(6) not null,
+	constraint phoneinfo_univ_idx_fk foreign key(ref) 
 		references phoneinfo_basic(idx) on delete cascade
 );
 create table phoneinfo_com(
 	idx number(6) primary key,
-	fr_u_company varchar2(20) default 'N' not null,
-	fr_ref number(6) not null,
-	constraint phoneinfo_com_idx_fk foreign key(fr_ref) 
+	company varchar2(20) default 'N',
+	dept varchar2(20) default 'N',
+	job varchar2(20) default 'N',
+	ref number(6) not null,
+	constraint phoneinfo_com_idx_fk foreign key(ref) 
 		references phoneinfo_basic(idx) on delete cascade
 );
+create table phoneinfo_cafe(
+	idx number(6) primary key,
+	cafeName varchar2(20) default 'N' not null,
+	nickName varchar2(20) default 'N',
+	ref number(6) not null,
+	constraint phoneinfo_cafe_idx_fk foreign key(ref)
+		references phoneinfo_basic(idx) on delete cascade
+);
+commit;
+select * from PHONEINFO_BASIC b,PHONEINFO_CAFE u where b.IDX=u.ref;
 -- 기본정보
 insert into phoneInfo_basic (idx,fr_name, fr_phonenumber, fr_email, fr_address)
 	values (PB_BASIC_IDX_SEQ.NEXTVAL,'손흥민','010-1111-1111','son@naver.com','영국');
@@ -209,28 +250,3 @@ where fr_name = '권소영'
 ------------------------------------------
 --sequence 생성
 ------------------------------------------
---1. basic 테이블 seq
-create sequence pb_basic_idx_seq 
-	start with 0
-	minvalue 0
-;
---2. com 테이블 seq
-create sequence pb_com_idx_seq
-	start with 0
-	minvalue 0
-;
---3. univ 테이블 seq
-create sequence pb_univ_idx_seq
-	start with 0
-	minvalue 0
-;
-
-
-
-
-
-
-
-
-
-
