@@ -6,10 +6,15 @@ drop sequence PBB_idx_seq;
 drop sequence PBC_idx_seq;
 drop sequence PBU_idx_seq;
 drop sequence PBF_idx_seq;
---1. basic 테이블 seq
+
 select *
 from orders o cross join customer c cross join book b
 where o.custid = c.custid and b.bookid = o.bookid;
+
+select *
+from phoneinfo_basic b join phoneinfo_univ u
+on b.idx = u.ref;
+--1. basic 테이블 seq
 create sequence PBB_idx_seq 
 	start with 0
 	minvalue 0
